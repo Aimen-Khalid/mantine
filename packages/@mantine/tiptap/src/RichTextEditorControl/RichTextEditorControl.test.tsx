@@ -23,6 +23,7 @@ function TestEditor({
     <RichTextEditor editor={editor}>
       <RichTextEditor.Toolbar>
         <RichTextEditor.Bold />
+        <RichTextEditor.Undo />
       </RichTextEditor.Toolbar>
       <RichTextEditor.Content />
     </RichTextEditor>
@@ -57,5 +58,48 @@ describe('@mantine/tiptap/RichTextEditorControl', () => {
     });
 
     await waitFor(() => expect(control).toHaveAttribute('data-active', 'true'));
+  });
+
+  it('sets aria-pressed on toggle controls in both states', async () => {
+    let editor: Editor | null = null;
+    render(<TestEditor immediatelyRender onEditor={(e) => (editor = e)} />);
+
+    const control = await screen.findByLabelText('Bold');
+    await waitFor(() => expect(editor).not.toBeNull());
+    expect(control).toHaveAttribute('aria-pressed', 'false');
+
+    act(() => {
+      editor!.chain().selectAll().toggleBold().run();
+    });
+
+    await waitFor(() => expect(control).toHaveAttribute('aria-pressed', 'true'));
+  });
+
+  it('does not set aria-pressed on controls without active state', async () => {
+    render(<TestEditor immediatelyRender />);
+    expect(await screen.findByLabelText('Undo')).not.toHaveAttribute('aria-pressed');
+  });
+
+  it('does not set aria-pressed on non-interactive controls', () => {
+    const { container } = render(
+      <RichTextEditor editor={null}>
+        <RichTextEditor.Control interactive={false} active data-testid="label-control" />
+      </RichTextEditor>
+    );
+    expect(container.querySelector('[data-testid="label-control"]')).not.toHaveAttribute(
+      'aria-pressed'
+    );
+  });
+
+  it('allows overriding aria-pressed', () => {
+    const { container } = render(
+      <RichTextEditor editor={null}>
+        <RichTextEditor.Control active={false} aria-pressed="mixed" data-testid="custom" />
+      </RichTextEditor>
+    );
+    expect(container.querySelector('[data-testid="custom"]')).toHaveAttribute(
+      'aria-pressed',
+      'mixed'
+    );
   });
 });

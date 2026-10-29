@@ -52,6 +52,7 @@ export const RichTextEditorControl = factory<RichTextEditorControlFactory>((_pro
 
   return (
     <UnstyledButton
+      aria-pressed={interactive && typeof active === 'boolean' ? active : undefined}
       {...others}
       {...ctx.getStyles('control', { className, style, classNames, styles })}
       disabled={disabled}
@@ -60,7 +61,6 @@ export const RichTextEditorControl = factory<RichTextEditorControlFactory>((_pro
       data-interactive={interactive || undefined}
       data-disabled={disabled || undefined}
       data-active={active || undefined}
-      aria-pressed={(active && interactive) || undefined}
       aria-hidden={!interactive || undefined}
       unstyled={ctx.unstyled}
       variant={ctx.variant || 'default'}
@@ -145,7 +145,7 @@ export function createControl({
       <RichTextEditorControlBase
         aria-label={_label}
         title={_label}
-        active={active}
+        active={isActive ? active : undefined}
         icon={props.icon || icon}
         {...restProps}
         disabled={disabled}
