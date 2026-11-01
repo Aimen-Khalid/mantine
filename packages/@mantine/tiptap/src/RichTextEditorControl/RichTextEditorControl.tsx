@@ -98,7 +98,7 @@ RichTextEditorControlBase.displayName = '@mantine/tiptap/RichTextEditorControlBa
 export interface CreateControlProps {
   label: keyof RichTextEditorLabels;
   icon: React.FC<{ style: React.CSSProperties }>;
-  isActive?: { name: string; attributes?: Record<string, any> | string };
+  isActive?: { name?: string; attributes?: Record<string, any> | string };
   isDisabled?: (editor: any) => boolean;
   operation: { name: string; attributes?: Record<string, any> | string };
 }
@@ -127,9 +127,12 @@ export function createControl({
         const safeEditor = editor && !editor.isDestroyed ? editor : null;
         return {
           active:
-            safeEditor && isActive?.name
-              ? safeEditor.isActive(isActive.name, isActive.attributes)
-              : false,
+            !safeEditor || !isActive
+              ? false
+              : isActive.name
+                ? safeEditor.isActive(isActive.name, isActive.attributes)
+                : typeof isActive.attributes === 'object' &&
+                  safeEditor.isActive(isActive.attributes),
           // Without a usable editor the operation cannot run, so the control must
           // appear disabled regardless of whether a user-provided `isDisabled` exists.
           disabled: safeEditor ? (isDisabled?.(safeEditor) ?? false) : true,

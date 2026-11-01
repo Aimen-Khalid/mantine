@@ -1,4 +1,5 @@
 import { act, waitFor } from '@testing-library/react';
+import TextAlign from '@tiptap/extension-text-align';
 import { Editor, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { render, screen } from '@mantine-tests/core';
@@ -78,6 +79,44 @@ describe('@mantine/tiptap/RichTextEditorControl', () => {
   it('does not set aria-pressed on controls without active state', async () => {
     render(<TestEditor immediatelyRender />);
     expect(await screen.findByLabelText('Undo')).not.toHaveAttribute('aria-pressed');
+  });
+
+  it('reflects the computed text alignment in aria-pressed', async () => {
+    let editor: Editor | null = null;
+
+    function AlignEditor() {
+      const instance = useEditor({
+        extensions: [StarterKit, TextAlign.configure({ types: ['paragraph'] })],
+        content: '<p>Hello world</p>',
+        immediatelyRender: true,
+      });
+      editor = instance;
+
+      return (
+        <RichTextEditor editor={instance}>
+          <RichTextEditor.Toolbar>
+            <RichTextEditor.AlignCenter />
+            <RichTextEditor.AlignRight />
+          </RichTextEditor.Toolbar>
+          <RichTextEditor.Content />
+        </RichTextEditor>
+      );
+    }
+
+    render(<AlignEditor />);
+
+    const center = await screen.findByLabelText('Align text: center');
+    const right = await screen.findByLabelText('Align text: right');
+    await waitFor(() => expect(editor).not.toBeNull());
+    expect(center).toHaveAttribute('aria-pressed', 'false');
+    expect(right).toHaveAttribute('aria-pressed', 'false');
+
+    act(() => {
+      editor!.chain().selectAll().setTextAlign('center').run();
+    });
+
+    await waitFor(() => expect(center).toHaveAttribute('aria-pressed', 'true'));
+    expect(right).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('does not set aria-pressed on non-interactive controls', () => {
